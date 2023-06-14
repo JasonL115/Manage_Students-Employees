@@ -14,11 +14,14 @@ document.querySelector('#btnThemSinhVien').onclick = function () {
 
     console.log(sv);
 
-    arrSinhVien.push(sv)
+    arrSinhVien.push(sv);
 
 
     //gọi hàm để tạo ra dữ liệu html trên body
     renderSinhVien(arrSinhVien);
+
+    //Lưu vào localstorage
+    luuLocalStorage();
 
 }
 
@@ -30,8 +33,12 @@ document.querySelector('#btnThemSinhVien').onclick = function () {
 
 function renderSinhVien(arrSV) {
     var contentHTML = '';
-    for (var index = 0; index < arrSV.length ; index++) {
+    for (var index = 0; index < arrSV.length; index++) {
         var sv = arrSV[index]
+        sv.tinhDiemTrungBinh = function () {
+            var diemTrungBinh = ((Number(this.diemToan) + Number(this.diemLy) + Number(this.diemHoa)) / 3).toFixed(2);
+            return diemTrungBinh;
+        }
         contentHTML += `
             <tr class="bg-secondary text-white">
                 <td>${sv.maSinhVien}</td>
@@ -40,21 +47,22 @@ function renderSinhVien(arrSV) {
                 <td>${sv.tinhDiemTrungBinh()}</td>
                 <td>${sv.diemRenLuyen}</td>
                 <td><button class="btn btn-danger" onclick="xoaSinhVien('${sv.maSinhVien}')">Delete</button></td>
+                <td>
+                    <button class="btn btn-primary" onclick="suaSinhVien('${sv.maSinhVien}')">Edit</button>
+                </td>
             </tr>
         `
     }
     //console.log(contentHTML)
 
     document.querySelector('tbody').innerHTML = contentHTML;
-
 }
 
 function xoaSinhVien(maSVClick) {
     var indexDel = -1;
-    for(var index = 0; index < arrSinhVien.length; index ++)
-    {
+    for (var index = 0; index < arrSinhVien.length; index++) {
         var svTrongMang = arrSinhVien[index];
-        if(svTrongMang.maSinhVien === maSVClick) {
+        if (svTrongMang.maSinhVien === maSVClick) {
             indexDel = index;
             break;
         }
@@ -62,15 +70,150 @@ function xoaSinhVien(maSVClick) {
 
     // Gọi hàm slice trong mảng sinh viên để xóa tại vị trí cần del
     arrSinhVien.splice(indexDel, 1);
-    // Gọi hàn render lại table với dữ liệu sau khi xóa
+    // Gọi hàm render lại table với dữ liệu sau khi xóa
     renderSinhVien(arrSinhVien);
-
+    luuLocalStorage();
 }
-1
+
+// arrSinhVien = [{...},{...},{...}]
+function suaSinhVien(maSVClick) {
+    console.log(maSVClick);
+
+    //Lấy ra đc object mà mình cần click vào
+    var indexEdit = -1;
+    for (var index = 0; index < arrSinhVien.length; index++) {
+        //Mỗi lần duyệt lấy ra 1 sv
+        var sv = arrSinhVien[index];
+        if (sv.maSinhVien === maSVClick) {
+            indexEdit = index;
+            break;
+        }
+    }
+
+    //INdex edit
+    if (indexEdit != -1) {
+        //đem dữ liệu tại dòng đó gán lên giao diện
+        document.getElementById('maSinhVien').value = arrSinhVien[indexEdit].maSinhVien;
+        document.getElementById('tenSinhVien').value = arrSinhVien[indexEdit].tenSinhVien;
+        document.getElementById('loaiSinhVien').value = arrSinhVien[indexEdit].loauSinhVien;
+        document.getElementById('diemToan').value = arrSinhVien[indexEdit].diemToan;
+        document.getElementById('diemLy').value = arrSinhVien[indexEdit].diemLy;
+        document.getElementById('diemHoa').value = arrSinhVien[indexEdit].diemHoa;
+        document.getElementById('diemRenLuyen').value = arrSinhVien[indexEdit].diemRenLuyen;
+        document.getElementById('maSinhVien').disabled = true;
+    }
+}
+
+document.getElementById('btnCapNhat').onclick = function () {
+    //Lấy thông tin người dùng thay đổi và update
+    var svUpdate = new SinhVien();
+    svUpdate.maSinhVien = document.getElementById('maSinhVien').value;
+    svUpdate.tenSinhVien = document.getElementById('tenSinhVien').value;
+    svUpdate.loaiSinhVien = document.getElementById('loaiSinhVien').value;
+    svUpdate.diemToan = document.getElementById('diemToan').value;
+    svUpdate.diemLy = document.getElementById('diemLy').value;
+    svUpdate.diemHoa = document.getElementById('diemHoa').value;
+    svUpdate.diemRenLuyen = document.getElementById('diemRenLuyen').value;
+
+    console.log(svUpdate);
+
+    // arrSinhVine = [{maSinhVien:1,...},{maSinhVien: 2...}]
+
+    for (var index = 0; index < arrSinhVien.length; index++) {
+        var svTrongMang = arrSinhVien[index];
+        if (svTrongMang.maSinhVien === svUpdate.maSinhVien) {
+            //Tiến hành cập nhật
+            svTrongMang.tenSinhVien = svUpdate.tenSinhVien;
+            svTrongMang.loaiSinhVien = svUpdate.loaiSinhVien;
+            svTrongMang.diemToan = svUpdate.diemToan;
+            svTrongMang.diemLy = svUpdate.diemLy;
+            svTrongMang.diemHoa = svUpdate.diemHoa;
+            svTrongMang.diemRenLuyen = svUpdate.diemRenLuyen;
+            break;
+        }
+    }
+    renderSinhVien(arrSinhVien);
+    luuLocalStorage();
+}
+
+// Tim kiem Sinhvien
+document.getElementById('btnTimKiem').onclick = function(){
+    // input
+    var tuKhoa = document.getElementById('txtTuKhoa').value;
+
+    tuKhoa = tuKhoa.trim().toLowerCase();
+    tuKhoa = removeVietnameseTones(tuKhoa);
+
+    // output
+    var arrKetQua = [];
+
+    for(var index = 0; index < arrSinhVien.length; index++) {
+        // Mỗi lần duyệt lấy ra 1 object sv trong mảng
+        var tenSinhVien = arrSinhVien[index].tenSinhVien;
+        tenSinhVien = removeVietnameseTones(tenSinhVien);
+        // Lấy tên từng sv ra kiểm ta xem có từ khóa hay ko
+        if(tenSinhVien.search(tuKhoa) !== -1) {
+            arrKetQua.push(arrSinhVien[index]);
+        }
+    }
+    renderSinhVien(arrKetQua);
+}
+
+function removeVietnameseTones(str) {
+    str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+    str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+    str = str.replace(/đ/g, "d");
+    str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
+    str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
+    str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
+    str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
+    str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
+    str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
+    str = str.replace(/Đ/g, "D");
+    // Some system encode vietnamese combining accent as individual utf-8 characters
+    // Một vài bộ encode coi các dấu mũ, dấu chữ như một kí tự riêng biệt nên thêm hai dòng này
+    str = str.replace(/\u0300|\u0301|\u0303|\u0309|\u0323/g, ""); // ̀ ́ ̃ ̉ ̣  huyền, sắc, ngã, hỏi, nặng
+    str = str.replace(/\u02C6|\u0306|\u031B/g, ""); // ˆ ̆ ̛  Â, Ê, Ă, Ơ, Ư
+    // Remove extra spaces
+    // Bỏ các khoảng trắng liền nhau
+    str = str.replace(/ + /g, " ");
+    str = str.trim();
+    // Remove punctuations
+    // Bỏ dấu câu, kí tự đặc biệt
+    str = str.replace(
+        /!|@|%|\^|\*|\(|\)|\+|\=|\<|\>|\?|\/|,|\.|\:|\;|\'|\"|\&|\#|\[|\]|~|\$|_|`|-|{|}|\||\\/g,
+        " "
+    );
+    return str;
+}
 
 
+// Viết hàm localstorage
 
+function luuLocalStorage() {
+    var stringArrSinhVien = JSON.stringify(arrSinhVien);
+    console.log(stringArrSinhVien);
 
+    //Lưu
+    localStorage.setItem('arrSinhVien', stringArrSinhVien);
+}
+
+function layDuLieuStorage() {
+    //Kiểm tra xem localStorage có name đó ko
+    if (localStorage.getItem('arrSinhVien')) {
+        var stringSinhVien = localStorage.getItem('arrSinhVien');
+        arrSinhVien = JSON.parse(stringSinhVien);
+        console.log(arrSinhVien);
+
+        renderSinhVien(arrSinhVien);
+    }
+}
+//Lấy dữ liệu từ localstorage
+layDuLieuStorage();
 
 
 

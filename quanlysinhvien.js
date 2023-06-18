@@ -7,6 +7,8 @@ document.querySelector('#btnThemSinhVien').onclick = function () {
     sv.maSinhVien = document.querySelector('#maSinhVien').value;
     sv.tenSinhVien = document.querySelector('#tenSinhVien').value;
     sv.loaiSinhVien = document.querySelector('#loaiSinhVien').value;
+    sv.soDienThoai = document.querySelector('#soDienThoai').value;
+    sv.email = document.querySelector('#email').value;
     sv.diemToan = document.querySelector('#diemToan').value;
     sv.diemLy = document.querySelector('#diemLy').value;
     sv.diemHoa = document.querySelector('#diemHoa').value;
@@ -14,6 +16,42 @@ document.querySelector('#btnThemSinhVien').onclick = function () {
 
     console.log(sv);
 
+    /*--------------Validation-------------*/
+    var valid = true;
+    // if (sv.maSinhVien.trim() === "") {
+    //     document.getElementById('err-required-maSinhVien').innerHTML = "Mã sinh viên không được bỏ trống!"
+    //     // Dừng hàm
+    //     valid = false;
+    // } else {
+    //     document.getElementById('err-required-maSinhVien').style.display = 'none';
+    // }
+    
+    // if (sv.tenSinhVien.trim() === "") {
+    //     document.getElementById('err-required-tenSinhVien').innerHTML = "Tên sinh viên không được bỏ trống!"
+    //     valid = false;
+    // } else {
+    //     document.getElementById('err-required-tenSinhVien').style.display = 'none';
+    // }
+
+    valid = validation.kiemTraRong(sv.maSinhVien, 'err-required-maSinhVien','Mã sinh viên') & validation.kiemTraRong(sv.tenSinhVien, 'err-required-tenSinhVien', 'Tên sinh viên') & validation.kiemTraRong(sv.email, 'err-required-email','Email') & validation.kiemTraRong(sv.soDienThoai, 'err-required-soDienThoai', 'SDT');
+
+    valid &= validation.kiemTraKyTu(sv.tenSinhVien,'err-letter-tenSinhVien', 'Tên sinh viên' );
+
+    valid &= validation.kiemTraEmail(sv.email, 'err-email', 'email');
+
+    valid &= validation.kiemTraSoDienThoai(sv.soDienThoai, 'err-soDienThoai' , 'Số điện thoại');
+
+    valid &= validation.kiemTraDoDai(sv.maSinhVien, 'err-length-maSinhVien', 'Mã sinh viên', 1,5);
+
+    valid &= validation.kiemTraGiaTri(sv.diemToan, "err-value-diemToan", 'Điểm Toán', 1,10) & validation.kiemTraGiaTri(sv.diemLy, "err-value-diemLy", 'Điểm Lý', 1,10) & validation.kiemTraGiaTri(sv.diemHoa, "err-value-diemHoa", 'Điểm Hóa', 1,10) & validation.kiemTraGiaTri(sv.diemRenLuyen, "err-value-diemRenLuyen", 'Điểm Rèn Luyện', 1,10);
+
+    if(!!!valid) {
+        return;
+    }
+
+
+
+    // Đưa object vào mảng để quản lý
     arrSinhVien.push(sv);
 
 
@@ -137,7 +175,7 @@ document.getElementById('btnCapNhat').onclick = function () {
 }
 
 // Tim kiem Sinhvien
-document.getElementById('btnTimKiem').onclick = function(){
+document.getElementById('btnTimKiem').onclick = function () {
     // input
     var tuKhoa = document.getElementById('txtTuKhoa').value;
 
@@ -147,12 +185,12 @@ document.getElementById('btnTimKiem').onclick = function(){
     // output
     var arrKetQua = [];
 
-    for(var index = 0; index < arrSinhVien.length; index++) {
+    for (var index = 0; index < arrSinhVien.length; index++) {
         // Mỗi lần duyệt lấy ra 1 object sv trong mảng
         var tenSinhVien = arrSinhVien[index].tenSinhVien;
         tenSinhVien = removeVietnameseTones(tenSinhVien);
         // Lấy tên từng sv ra kiểm ta xem có từ khóa hay ko
-        if(tenSinhVien.search(tuKhoa) !== -1) {
+        if (tenSinhVien.search(tuKhoa) !== -1) {
             arrKetQua.push(arrSinhVien[index]);
         }
     }
